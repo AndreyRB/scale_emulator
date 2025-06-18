@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Управление логотипом{% endblock %}
+{% block header %}Управление логотипом{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label class="form-label">Тип логотипа</label>
+                    <select class="form-select" id="logo-type">
+                        <option value="0">LOGO 2 (64x64)</option>
+                        <option value="1">Ростест (64x48)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <div id="logo-preview-container" class="border p-2 mb-3" style="min-height: 200px;">
+                        <p class="text-muted text-center">Превью логотипа</p>
+                        <img id="logo-preview" src="#" alt="Превью логотипа" class="img-fluid d-none">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <button class="btn btn-primary w-100 mb-2" id="read-logo">
+                        <i class="bi bi-download"></i> Прочитать с весов
+                    </button>
+                    <button class="btn btn-secondary w-100 mb-2" id="load-logo">
+                        <i class="bi bi-upload"></i> Загрузить из файла
+                    </button>
+                    <button class="btn btn-success w-100 mb-2" id="save-logo">
+                        <i class="bi bi-save"></i> Сохранить в файл
+                    </button>
+                    <button class="btn btn-info w-100" id="write-logo">
+                        <i class="bi bi-send"></i> Записать в весы
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="file" id="logo-file-input" class="d-none" accept=".png,.bmp">
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        const logoPreview = $('#logo-preview');
+        const fileInput = $('#logo-file-input');
+        let logoData = null;
+        
+        // Загрузка логотипа из файла
+        $('#load-logo').click(function() {
+            fileInput.click();
+        });
+        
+        fileInput.change(function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    logoPreview.attr('src', e.target.result).removeClass('d-none');
+                    $('#logo-preview-container p').addClass('d-none');
+                    
+                    // Здесь будет преобразование в бинарный формат для весов
+                    // logoData = convertImageToBinary(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Остальные обработчики...
+    });
+</script>
+{% endblock %}

@@ -414,7 +414,7 @@ class ScaleDatabase:
         with self._get_connection() as c:
             c.execute('SELECT plu_id FROM price_keys WHERE key_num = ?', (key_num,))
             row = c.fetchone()
-            if row and row['plu_id'] is not None:
+            if row is not None:
                 return row['plu_id']
             return None
     # endregion

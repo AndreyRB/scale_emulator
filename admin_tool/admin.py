@@ -47,15 +47,19 @@ LENGTHS = {
 
 ERROR_RESPONSE = b'\xEE'
 
+@staticmethod
+def refresh_ports():
+    return [port.device for port in serial.tools.list_ports.comports()]
+        
+
 class ScaleAdmin:
     plu_updated = pyqtSignal(dict)  # Сигнал при обновлении данных
     
     def __init__(self, port: str = None, baudrate: str = None, ready_callback=None):
         self.port = port
         self.ser = None
-        self.ready_callback = ready_callback
-        #self.port_lock = Lock()
-        #self.port_lock = QMutex()
+        self.ready_callback = self._wrap_ready_callback(ready_callback)
+        self._ready_state = False
         if port:
             self._connect(port, baudrate)
 
@@ -82,29 +86,43 @@ class ScaleAdmin:
         except Exception as e:
             logging.error(f"Ошибка открытия порта: {str(e)}")
 
-    def _disconnect(self):
+    def disconnect(self):
         if self.ser and self.ser.is_open:
             self.ser.close()
             logging.info(f"Порт {self.port} закрыт")
 
-    
+    def is_ready(self) -> bool:
+        return getattr(self, "_ready_state", False)
+
+    def _wrap_ready_callback(self, user_callback):
+        def wrapper(state):
+            self._ready_state = state
+            if user_callback:
+                user_callback(state)
+        return wrapper
 
     def _wait_ready(self, timeout=2.0) -> bool:
-        """Ждёт байт готовности от весов, возвращает True если получен"""
         start = time.time()
         while time.time() - start < timeout:
             byte = self.ser.read(1)
             if not byte:
                 continue
+            if byte == b'\xEE':
+                logging.info("Ошибка выполнения команды (b'\\xEE')")
+                # Дочитываем байт готовности
+                ready = self.ser.read(1)
+                if ready == b'\x80' and self.ready_callback:
+                    self.ready_callback(True)
+                return True
             if byte == b'\x80':
                 logging.info("Получен байт готовности от весов")
                 if self.ready_callback:
                     self.ready_callback(True)
                 return True
-            # Логируем неожиданные байты (например, b'\xEE')
             logging.debug(f"Пропущен байт: {byte.hex()}")
         if self.ready_callback:
             self.ready_callback(False)
+        logging.info("Таймаут ожидания байта готовности")
         return False
 
     def _send_command(self, cmd: bytes, data: bytes = b'', expected_len: int = None) -> bytes:
@@ -120,8 +138,6 @@ class ScaleAdmin:
             if expected_len and expected_len > 0:
                 response = self.ser.read(expected_len)
                 if response and response[0:1] == b'\xEE':
-                    if self.ready_callback:
-                        self.ready_callback(False)
                     logging.error("Ошибка выполнения команды (b'\\xEE')")
                     # Дочитываем байт готовности
                     ready = self.ser.read(1)
@@ -137,8 +153,6 @@ class ScaleAdmin:
             else:
                 resp = self.ser.read(1)
                 if resp == b'\xEE':
-                    if self.ready_callback:
-                        self.ready_callback(False)
                     logging.error("Ошибка выполнения команды (b'\\xEE')")
                     # Дочитываем байт готовности!
                     ready = self.ser.read(1)
@@ -293,9 +307,12 @@ class ScaleAdmin:
         return bytes(int(ch) for ch in s)
 
     def _bytes_to_str(self, b: bytes) -> str:
-        """Преобразует 6 байт (каждая цифра — отдельный байт) в строку"""
-        return b[:6].decode('ascii', errors='ignore')
-        #return ''.join(str(byte) for byte in b[:6])
+        return ''.join(str(byte) for byte in b[:6])
+
+    # def _bytes_to_str(self, b: bytes) -> str:
+    #     """Преобразует 6 байт (каждая цифра — отдельный байт) в строку"""
+    #     return b[:6].decode('ascii', errors='ignore')
+    #     #return ''.join(str(byte) for byte in b[:6])
 
     def _encode_cert_code(self, cert_code: str, line: int, logo_type: int) -> bytes:
         """Кодирует сертификационный код для логотипа"""
@@ -398,7 +415,6 @@ class ScaleAdmin:
             'free_msg': int.from_bytes(response[38:40], 'little'),
         }
 
-
     def reset_total_sales(self) -> bool:
         """Сбросить общие итоги продаж на весах"""
         response = self._send_command(cmd=COMMANDS['reset_total_sales'], expected_len=0)
@@ -417,6 +433,7 @@ class ScaleAdmin:
             return {}
 
         msg = {
+            'id': id,
             'content': response.rstrip(b'\x00').decode('cp1251', errors='ignore')
         }
         return msg
@@ -615,6 +632,15 @@ class ScaleAdmin:
     #endregion
 
     #region Клавиши цен
+    def get_all_key_binds(self):
+        """Вернуть список всех привязок клавиш к PLU"""
+        binds = []
+        for key_num in range(1, 55):  # 1-54
+            plu_id = self.get_plu_by_key(key_num)
+            if plu_id:
+                binds.append({"key_num": key_num, "plu_id": plu_id})
+        return binds
+
     def bind_plu_to_key(self, key_num: int, plu_id: int) -> bool:
         """Привязать PLU к клавише цены"""
         data = plu_id.to_bytes(4, 'little') + key_num.to_bytes(1, 'little')

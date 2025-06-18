@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Настройки весов{% endblock %}
+{% block header %}Настройки весов{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('save_user_settings') }}">
+    <div class="card mb-3">
+        <div class="card-header">Основные настройки</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Номер отдела (000-999)</label>
+                    <input type="number" class="form-control" name="dept_no" min="0" max="999" value="{{ settings.dept_no }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Номер формата этикетки (1-99)</label>
+                    <input type="number" class="form-control" name="label_format" min="1" max="99" value="{{ settings.label_format }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Номер формата штрих-кода (0-8)</label>
+                    <input type="number" class="form-control" name="barcode_format" min="0" max="8" value="{{ settings.barcode_format }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Сдвиг печати (1-99)</label>
+                    <input type="number" class="form-control" name="adjst" min="1" max="99" value="{{ settings.adjst }}">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">Особенности печати</div>
+        <div class="card-body">
+            {% for feature in features %}
+            <div class="form-check mb-2">
+                <input type="checkbox" name="print_feature{{ loop.index0 }}" {% if print_features_flags[loop.index0] %}checked{% endif %}>
+                <label class="form-check-label">{{ feature }}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">Автопечать</div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Величина изменения веса для автопечати (г)</label>
+                <input type="number" class="form-control" name="auto_print_weight" min="0" max="65535" value="{{ settings.auto_print_weight }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <button type="button" class="btn btn-secondary" id="read-settings-btn">
+            <i class="bi bi-arrow-repeat"></i> Считать с весов
+        </button>
+        <div>
+            <button type="reset" class="btn btn-outline-secondary">Сбросить</button>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#read-settings-btn').click(function() {
+            $.get("{{ url_for('read_user_settings') }}", function(data) {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                $('input[name="dept_no"]').val(data.dept_no);
+                $('input[name="label_format"]').val(data.label_format);
+                $('input[name="barcode_format"]').val(data.barcode_format);
+                $('input[name="adjst"]').val(data.adjst);
+                $('input[name="auto_print_weight"]').val(data.auto_print_weight);
+
+                // Чекбоксы особенностей печати
+                let features = data.print_features || 0;
+                for (let i = 0; i < 8; i++) {
+                    $('input[name="print_feature' + i + '"]').prop('checked', (features & (1 << i)) !== 0);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

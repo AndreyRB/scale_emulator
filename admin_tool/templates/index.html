@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Сетевое подключение{% endblock %}
+{% block header %}Конфигурация сети{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('connect') }}">
+            <div class="mb-3">
+                <label for="port" class="form-label">COM-порт:</label>
+                <select class="form-select" id="port" name="port">
+                    {% for port in ports %}
+                        <option value="{{ port }}" {% if port == current_port %}selected{% endif %}>{{ port }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="baudrate" class="form-label">Скорость:</label>
+                <select class="form-select" id="baudrate" name="baudrate">
+                    <option value="9600" {% if 9600 == current_baudrate %}selected{% endif %}>9600</option>
+                    <option value="115200" {% if 115200 == current_baudrate %}selected{% endif %}>115200</option>
+                    <option value="57600" {% if 57600 == current_baudrate %}selected{% endif %}>57600</option>
+                    <option value="38400" {% if 38400 == current_baudrate %}selected{% endif %}>38400</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                {% if connected %}Отключиться{% else %}Подключиться{% endif %}
+            </button>
+            <button type="button" class="btn btn-secondary" id="refresh-ports">
+                Обновить порты
+            </button>
+        </form>
+    </div>
+</div>
+
+{% if connection_status %}
+    <div class="mt-3">
+        <div class="alert alert-{{ 'success' if connection_status.connected else 'danger' }}" role="alert">
+            {{ connection_status.message }}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Обновление списка портов
+        $('#refresh-ports').click(function() {
+            $.get("{{ url_for('refresh_ports') }}", function(data) {
+                $('#port').empty();
+                data.ports.forEach(function(port) {
+                    $('#port').append($('<option>', {
+                        value: port,
+                        text: port
+                    }));
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

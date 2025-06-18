@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Администрирование весов - {% block title %}{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            padding: 20px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+        }
+        .main-content {
+            margin-left: 220px;
+            padding: 20px;
+        }
+        .status-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 5px;
+            color: white;
+        }
+        .ready-true { background-color: #28a745; }
+        .ready-false { background-color: #dc3545; }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Сайдбар -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <h4 class="mb-3">CAS LP 1.6 Admin</h4>
+                <div class="list-group">
+                    <a href="{{ url_for('index') }}" class="list-group-item list-group-item-action">Конфигурация сети</a>
+                    <a href="{{ url_for('plu') }}" class="list-group-item list-group-item-action">Товары и сообщения</a>
+                    <a href="{{ url_for('user_settings') }}" class="list-group-item list-group-item-action">Настройки весов</a>
+                    <a href="{{ url_for('factory_settings') }}" class="list-group-item list-group-item-action">Заводские установки</a>
+                    <a href="{{ url_for('current_status') }}" class="list-group-item list-group-item-action">Текущее состояние</a>
+                    <a href="{{ url_for('logo') }}" class="list-group-item list-group-item-action">Логотип</a>
+                </div>
+                <div class="mt-3 status-indicator">
+                    Готовность: 
+                </div>
+            </div>
+            
+            <!-- Основной контент -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                {% if scales_ready %}
+                    <div class="alert alert-success" role="alert">
+                        Весы подключены и готовы к работе!
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger" role="alert">
+                        Весы не готовы или не подключены!
+                    </div>
+                {% endif %}
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <h2>{% block header %}{% endblock %}</h2>
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

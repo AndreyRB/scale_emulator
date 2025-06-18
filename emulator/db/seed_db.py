@@ -48,13 +48,13 @@ def generate_test_data():
         
         plu_items.append({
             "id": i,
-            "code": (''.join([str(random.randint(0, 9)) for _ in range(6)])).encode('cp1251'),
+            "code": bytes([int(x) for x in ''.join([str(random.randint(0, 9)) for _ in range(6)])]),
             "name1": f"Товар #{i} {' '.join(['тест'] * random.randint(1, 3))}",
             "name2": f"Категория: {' '.join(['кат'] * random.randint(1, 3))}",
             "price": random.randint(100, 10000),  # В копейках
             "expiry_date": expiry_bytes,
             "tare": random.randint(0, 100),
-            "group_code": (''.join([str(random.randint(0, 9)) for _ in range(6)])).encode('cp1251'),
+            "group_code": bytes([int(x) for x in ''.join([str(random.randint(0, 9)) for _ in range(6)])]),
             "message_id": random.randint(1, 10),
             "last_reset": last_reset_bytes,  # BCD-формат
             "total_sum": random.randint(1000, 100000),

@@ -127,7 +127,7 @@ class CommandHandler:
             return b'\xEE'
 
     def _handle_ready(self) -> bytes:
-        return b'\xAA'
+        return b''
     
     #region Состояние весов
     def _handle_read_state(self) -> bytes:
@@ -194,6 +194,23 @@ class CommandHandler:
         if not plu:
             return b'\xEE'
 
+        # Если все поля кроме id пустые/нулевые — возвращаем id и нули
+        is_empty = (
+            (plu.get('code') in (b'\x00'*6, b'', None)) and
+            (not plu.get('name1')) and
+            (not plu.get('name2')) and
+            (plu.get('price', 0) == 0) and
+            (plu.get('expiry_date') in (b'\x00'*3, b'', None)) and
+            (plu.get('tare', 0) == 0) and
+            (plu.get('group_code') in (b'\x00'*6, b'', None)) and
+            (plu.get('message_id', 0) == 0)
+        )
+
+        if is_empty:
+            result = bytearray(100)
+            result[0:4] = pack('<I', plu_id)
+            return bytes(result)
+
         # Формируем 83 байта основной зоны
         result = bytearray(83)
         result[0:4] = pack('<I', plu['id'])
@@ -201,7 +218,7 @@ class CommandHandler:
         result[10:38] = plu['name1'].encode('cp1251', errors='ignore')[:28].ljust(28, b'\x00')
         result[38:66] = plu['name2'].encode('cp1251', errors='ignore')[:28].ljust(28, b'\x00')
         result[66:70] = pack('<I', plu['price'])
-        # expiry_type, expiry_days, expiry_date
+        
         expiry_bytes = plu.get('expiry_date', b'\x00\x00\x00')
         if len(expiry_bytes) < 3:
             expiry_bytes = expiry_bytes.ljust(3, b'\x00')
@@ -209,7 +226,7 @@ class CommandHandler:
             expiry_bytes = expiry_bytes[:3]
         result[70:73] = expiry_bytes
         result[73:75] = pack('<H', plu['tare'])
-        result[75:81] = plu['group_code'] if isinstance(plu['group_code'], bytes) else bytes(plu['group_code'], 'ascii') # 01.06.25 изменено
+        result[75:81] = plu['group_code'] if isinstance(plu['group_code'], bytes) else bytes(plu['group_code'], 'ascii')
         result[81:83] = pack('<H', plu['message_id'])
 
         # Формируем 17 байт read-only зоны
@@ -247,7 +264,7 @@ class CommandHandler:
             }
             
             self.db.upsert_plu(plu_data)
-            return b'\xAA'
+            return b''
 
         except Exception as e:
             logging.error(f"Write PLU error: {str(e)}")
@@ -257,7 +274,7 @@ class CommandHandler:
         try:
             plu_id = unpack('<I', data[:4])[0]
             success = self.db.clear_plu(plu_id)
-            return b'\xAA' if success else b'\xEE'
+            return b'' if success else b'\xEE'
         except Exception as e:
             logging.error(f"Delete PLU error: {str(e)}")
             return b'\xEE'
@@ -278,7 +295,7 @@ class CommandHandler:
             return b'\xEE'
         plu_id = unpack('<I', data[:4])[0]
         success = self.db.reset_plu_totals(plu_id)
-        return b'\xAA' if success else b'\xEE'
+        return b'' if success else b'\xEE'
     # endregion
 
     # region Общий итог продаж
@@ -299,7 +316,7 @@ class CommandHandler:
         return resp[:40]
 
     def _handle_delete_all_sales_count(self) -> bytes:
-        return b'\xAA' if self.db.reset_total_sales() else b'\xEE'
+        return b'' if self.db.reset_total_sales() else b'\xEE'
     # endregion
 
     # region Работа с сообщениями
@@ -319,11 +336,11 @@ class CommandHandler:
 
     def _handle_write_message(self, data: bytes) -> bytes:
         msg_num = unpack('<H', data[:2])[0]
-        content = data[2:402].decode('ascii').replace('\x00', '')
+        #content = data[2:402].decode('ascii').replace('\x00', '')
+        content = data[2:402].decode('cp1251', errors='replace').replace('\x00', '')
         try:
             success = self.db.insert_message(msg_num, content)
-            return b'\xAA' if success else b'\xEE'
-
+            return b'' if success else b'\xEE'
         except Exception as e:
             logging.error(f"Write message error: {str(e)}")
             return b'\xEE'
@@ -331,7 +348,7 @@ class CommandHandler:
     def _handle_delete_message(self, data: bytes) -> bytes:
         msg_num = unpack('<H', data)[0]
         success = self.db.delete_message(msg_num)
-        return b'\xAA' if success else b'\xEE'
+        return b'' if success else b'\xEE'
     # endregion
 
     # region Логотипы
@@ -348,7 +365,7 @@ class CommandHandler:
                 conn.execute('''INSERT OR REPLACE INTO logos 
                             (id, data, cert_code) VALUES (2, ?, ?)''',
                             (logo_data, cert_code))
-            return b'\xAA'
+            return b''
         except Exception as e:
             logging.error(f"Logo write error: {str(e)}")
             return b'\xEE'
@@ -370,7 +387,7 @@ class CommandHandler:
                             (id, data, cert_code) VALUES (?, ?, ?)''',
                             (logo_id, logo_data, cert_code))
                 
-            return b'\xAA'
+            return b''
         except Exception as e:
             logging.error(f"Logo write error: {str(e)}")
             return b'\xEE'
@@ -404,7 +421,7 @@ class CommandHandler:
             'auto_print_weight': int.from_bytes(data[5:7], 'little')
         }
         ok = self.db.set_user_settings(settings)
-        return b'\xAA' if ok else b'\xEE'
+        return b'' if ok else b'\xEE'
     # endregion
 
     # region Заводские настройки
@@ -452,7 +469,7 @@ class CommandHandler:
             with self.db._get_connection() as c:
                 c.execute('''INSERT OR REPLACE INTO logos (id, data, cert_code) VALUES (?, ?, ?)''',
                         (1, data, '0000'))
-            return b'\xAA'
+            return b''
         except Exception as e:
             logging.error(f"Write logo_roste error: {str(e)}")
             return b'\xEE'
@@ -471,7 +488,7 @@ class CommandHandler:
                 conn.execute('DELETE FROM update_borders')
                 conn.execute('INSERT INTO update_borders (start, end) VALUES (?, ?)',
                             (start, end))
-            return b'\xAA'
+            return b''
         except Exception as e:
             logging.error(f"Borders error: {str(e)}")
             return b'\xEE'
@@ -500,7 +517,8 @@ class CommandHandler:
         try:
             plu_id = self.db.get_plu_by_key(key_num)
             if plu_id is None:
-                return b'\xEE'
+                # Возвращаем 4 байта нулей, если не привязано
+                return (0).to_bytes(4, 'little')
             return pack('<I', plu_id)
         except Exception as e:
             logging.error(f"Read binded PLU error: {str(e)}")

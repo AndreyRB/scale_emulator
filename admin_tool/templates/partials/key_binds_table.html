@@ -1,0 +1,16 @@
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>ID кнопки</th>
+            <th>ID PLU</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for bind in binds %}
+        <tr>
+            <td>{{ bind.key_num }}</td>
+            <td>{{ bind.plu_id }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

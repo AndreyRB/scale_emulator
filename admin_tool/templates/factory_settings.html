@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Заводские установки{% endblock %}
+{% block header %}Заводские установки{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+    <div class="card-header">Параметры весов</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Наибольший предел взвешивания (г)</label>
+                <input type="number" class="form-control" name="max_weight" value="{{ settings.max_weight }}" readonly>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Десятичная точка (вес)</label>
+                <input type="number" class="form-control" name="dec_point_weight" value="{{ settings.dec_point_weight }}" readonly>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Десятичная точка (цена)</label>
+                <input type="number" class="form-control" name="dec_point_price" value="{{ settings.dec_point_price }}" readonly>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Десятичная точка (стоимость)</label>
+                <input type="number" class="form-control" name="dec_point_sum" value="{{ settings.dec_point_sum }}" readonly>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Двухдиапазонный режим</label>
+                <input type="text" class="form-control" name="dual_range" value="{{ 'Включён' if settings.dual_range else 'Выключен' }}" readonly>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Дискретность веса (верхний диапазон)</label>
+                <input type="number" class="form-control" name="weight_step_upper" value="{{ settings.weight_step_upper }}" readonly>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Дискретность веса (нижний диапазон)</label>
+                <input type="number" class="form-control" name="weight_step_lower" value="{{ settings.weight_step_lower }}" readonly>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Вес для определения цены (г)</label>
+                <input type="number" class="form-control" name="price_weight" value="{{ settings.price_weight }}" readonly>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Округление стоимости</label>
+                <input type="number" class="form-control" name="round_sum" value="{{ settings.round_sum }}" readonly>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Предел выборки тары (г)</label>
+                <input type="number" class="form-control" name="tare_limit" value="{{ settings.tare_limit }}" readonly>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+<form id="add-plu-form" method="post" action="{{ url_for('add_plu') }}">
+    <div class="form-group">
+        <label for="plu_id">PLU ID (1-4000):</label>
+        <input type="number" class="form-control" id="plu_id" name="id" min="1" max="4000" required>
+    </div>
+    <div class="form-group">
+        <label for="item_code">Код товара (6 цифр):</label>
+        <input type="text" class="form-control" id="item_code" name="code" pattern="\d{6}" maxlength="6" required placeholder="000000">
+    </div>
+    <div class="form-group">
+        <label for="name1">Название строка 1:</label>
+        <input type="text" class="form-control" id="name1" name="name1" maxlength="28" required>
+    </div>
+    <div class="form-group">
+        <label for="name2">Название строка 2:</label>
+        <input type="text" class="form-control" id="name2" name="name2" maxlength="28">
+    </div>
+    <div class="form-group">
+        <label for="logo_type">Логотип:</label>
+        <select class="form-control" id="logo_type" name="logo_type">
+            <option value="0">Нет</option>
+            <option value="1">РОСТЕСТ</option>
+            <option value="2">Другой</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="cert_code">Сертификационный код (4 символа):</label>
+        <input type="text" class="form-control" id="cert_code" name="cert_code" maxlength="4">
+    </div>
+    <div class="form-group">
+        <label for="price">Цена (руб.):</label>
+        <input type="number" class="form-control" id="price" name="price" min="0" max="9999.99" step="0.01" required>
+    </div>
+    <div class="form-group">
+        <label for="tare">Тара (г):</label>
+        <input type="number" class="form-control" id="tare" name="tare" min="0" max="9999" required>
+    </div>
+    <div class="form-group">
+        <label for="expiry_type">Тип срока годности:</label>
+        <select class="form-control" id="expiry_type" name="expiry_type">
+            <option value="0">Дата</option>
+            <option value="1">Дни</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="expiry_value">Срок годности:</label>
+        <input type="text" class="form-control" id="expiry_value" name="expiry_value" placeholder="дд.мм.гг или количество дней">
+    </div>
+    <div class="form-group">
+        <label for="group_code">Групповой код (6 цифр):</label>
+        <input type="text" class="form-control" id="group_code" name="group_code" pattern="\d{6}" maxlength="6" required placeholder="000000">
+    </div>
+    <div class="form-group">
+        <label for="message_number">Номер сообщения:</label>
+        <input type="number" class="form-control" id="message_number" name="message_number" min="0" max="1000" required>
+    </div>
+</form>

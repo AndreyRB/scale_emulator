@@ -36,9 +36,13 @@ if __name__ == "__main__":
         "Эмулятор весов"
     )
     time.sleep(3)
+    # admin = run_process(
+    #     [sys.executable, "-u", "scale_emulator/admin_tool/admin_guiPyQt.py"],
+    #     "Административная панель"
+    # )
     admin = run_process(
-        [sys.executable, "-u", "scale_emulator/admin_tool/admin_guiPyQt.py"],
-        "Административная панель"
+        [sys.executable, "-u", "scale_emulator/admin_tool/admin_guiFlask2.py"],
+        "Flask админка"
     )
 
     # Запускаем потоки для логирования вывода каждого процесса

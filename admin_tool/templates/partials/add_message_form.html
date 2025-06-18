@@ -1,0 +1,10 @@
+<form id="add-message-form" method="post" action="{{ url_for('add_message') }}">
+    <div class="form-group">
+        <label for="msg_id">ID сообщения (1-4000):</label>
+        <input type="number" class="form-control" id="msg_id" name="id" min="1" max="4000" required>
+    </div>
+    <div class="form-group">
+        <label for="msg_content">Текст сообщения:</label>
+        <input type="text" class="form-control" id="msg_content" name="content" maxlength="400" required>
+    </div>
+</form>

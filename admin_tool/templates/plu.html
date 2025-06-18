@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+
+{% block title %}Товары и сообщения{% endblock %}
+{% block header %}Товары и сообщения{% endblock %}
+
+{% block content %}
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'plu' or not active_tab %}active{% endif %}" href="#plu" data-bs-toggle="tab">Товары (PLU)</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'messages' %}active{% endif %}" href="#messages" data-bs-toggle="tab">Сообщения</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'sales' %}active{% endif %}" href="#sales" data-bs-toggle="tab">Итоги/Клавиши цен</a>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <!-- Вкладка PLU -->
+    <div class="tab-pane fade {% if active_tab == 'plu' or not active_tab %}show active{% endif %}" id="plu">
+        <div class="mb-3">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPluModal">
+                <i class="bi bi-plus-circle"></i> Добавить товар
+            </button>
+            <button class="btn btn-secondary" id="find-plu-btn">
+                <i class="bi bi-search"></i> Найти по ID
+            </button>
+            <button class="btn btn-danger" id="delete-plu-btn">
+                <i class="bi bi-trash"></i> Удалить по ID
+            </button>
+            <button class="btn btn-warning" id="reset-plu-btn">
+                <i class="bi bi-arrow-counterclockwise"></i> Сбросить итоги по ID
+            </button>
+            <button class="btn btn-outline-secondary" id="clear-plu-table">
+                <i class="bi bi-x-circle"></i> Очистить таблицу
+            </button>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Код</th>
+                        <th>Название 1</th>
+                        <th>Название 2</th>
+                        <th>Цена (руб.)</th>
+                        <th>Дата годн.</th>
+                        <th>Тара (г)</th>
+                        <th>Групп. код</th>
+                        <th>Сообщение</th>
+                        <th>Сброс</th>
+                        <th>Сумма</th>
+                        <th>Вес</th>
+                        <th>Продажи</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for plu in plu_list %}
+                    <tr>
+                        <td>{{ plu.id }}</td>
+                        <td>{{ plu.code }}</td>
+                        <td>{{ plu.name1 }}</td>
+                        <td>{{ plu.name2 }}</td>
+                        <td>{{ "%.2f"|format(plu.price / 100) }}</td>
+                        <td>{{ plu.expiry }}</td>
+                        <td>{{ plu.tare }}</td>
+                        <td>{{ plu.group_code }}</td>
+                        <td>{{ plu.message_number }}</td>
+                        <td>{{ plu.last_reset }}</td>
+                        <td>{{ plu.total_sum }}</td>
+                        <td>{{ plu.total_weight }}</td>
+                        <td>{{ plu.sales_count }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger remove-row" title="Удалить из таблицы">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Вкладка сообщений -->
+    <div class="tab-pane fade {% if active_tab == 'messages' %}show active{% endif %}" id="messages">
+        <div class="mb-3">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMessageModal">
+                <i class="bi bi-plus-circle"></i> Добавить сообщение
+            </button>
+            <button class="btn btn-secondary" id="find-message-btn">
+                <i class="bi bi-search"></i> Найти по ID
+            </button>
+            <button class="btn btn-danger" id="delete-message-btn">
+                <i class="bi bi-trash"></i> Удалить по ID
+            </button>
+            <button class="btn btn-outline-secondary" id="clear-messages-table">
+                <i class="bi bi-x-circle"></i> Очистить таблицу
+            </button>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Текст сообщения</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for message in messages %}
+                    <tr>
+                        <td>{{ message.id }}</td>
+                        <td>{{ message.content }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger remove-message-row" title="Удалить из таблицы">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Вкладка итогов и клавиш цен -->
+    <div class="tab-pane fade {% if active_tab == 'sales' %}show active{% endif %}" id="sales">
+        <div class="mb-3">
+            <button class="btn btn-info" id="show-totals-btn">
+                <i class="bi bi-bar-chart"></i> Показать итоги продаж
+            </button>
+            <button class="btn btn-warning" id="reset-totals-btn">
+                <i class="bi bi-arrow-counterclockwise"></i> Сбросить итоги продаж
+            </button>
+            <button class="btn btn-primary" id="bind-key-btn">
+                <i class="bi bi-key"></i> Привязать PLU к клавише
+            </button>
+            <button class="btn btn-secondary" id="get-plu-by-key-btn">
+                <i class="bi bi-key-fill"></i> PLU по клавише
+            </button>
+        </div>
+        
+        <div id="sales-results"></div>
+        <h5 class="mt-4">Привязки PLU к клавишам</h5>
+        <div id="key-bind-result" class="mt-3"></div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления PLU -->
+<div class="modal fade" id="addPluModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Добавить новый товар</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% include "partials/add_plu_form.html" %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="submit" form="add-plu-form" class="btn btn-primary">Добавить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления сообщения -->
+<div class="modal fade" id="addMessageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Добавить новое сообщение</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% include "partials/add_message_form.html" %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="submit" form="add-message-form" class="btn btn-primary">Добавить</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Очистить таблицу
+        ///////////////////
+        $('#clear-plu-table').click(function() {
+            $.post("{{ url_for('clear_plu_table') }}").done(function() {
+                $('table.table-striped tbody').empty();
+            });
+        });
+        $('#clear-messages-table').click(function() {
+            $.post("{{ url_for('clear_messages_table') }}").done(function() {
+                $('div#messages table.table-striped tbody').empty();
+            });
+        });
+        // Стереть строчку
+        ///////////////////
+        $(document).on('click', '.remove-row', function() {
+            const $row = $(this).closest('tr');
+            const id = $row.find('td:first').text();
+            $.post("{{ url_for('remove_plu_from_table') }}", { id: id })
+                .done(function() {
+                    $row.remove();
+                });
+        });
+        $(document).on('click', '.remove-message-row', function() {
+            const $row = $(this).closest('tr');
+            const id = $row.find('td:first').text();
+            $.post("{{ url_for('remove_message_from_table') }}", { id: id })
+                .done(function() {
+                    $row.remove();
+                });
+        });
+
+        // --- PLU ---
+        // --- Добавить товар (PLU) ---
+        $('#add-plu-btn').click(function() {
+            $('#addPluModal').modal('show');
+        });
+
+        $('#add-plu-form').submit(function(e) {
+            e.preventDefault();
+            $.post("{{ url_for('add_plu') }}", $(this).serialize())
+                .done(function() {
+                    location.reload();
+                })
+                .fail(function(xhr) {
+                    alert("Ошибка добавления товара: " + xhr.responseText);
+                });
+        });
+
+        // Найти по ID
+        $('#find-plu-btn').click(function() {
+            const id = prompt("Введите ID товара:");
+            if (id) {
+                window.location.href = "{{ url_for('find_plu') }}?id=" + id;
+            }
+        });
+        
+        // Удалить по ID
+        $('#delete-plu-btn').click(function() {
+            const id = prompt("Введите ID товара для удаления:");
+            if (id) {
+                if (confirm(`Вы уверены, что хотите удалить товар с ID ${id}?`)) {
+                    $.post("{{ url_for('delete_plu') }}", { id: id })
+                        .done(function() { location.reload(); });
+                }
+            }
+        });
+
+        // Сбросить итоги по ID
+        $('#reset-plu-btn').click(function() {
+            const id = prompt("Введите ID товара для сброса итогов:");
+            if (id) {
+                if (confirm(`Вы уверены, что хотите сбросить итоги по товару с ID ${id}?`)) {
+                    $.post("{{ url_for('reset_plu_totals') }}", { id: id })
+                        .done(function() { location.reload(); });
+                }
+            }
+        });
+
+        // --- Сообщения ---
+        // --- Добавить сообщение ---
+        $('#add-message-btn').click(function() {
+            $('#addMessageModal').modal('show');
+        });
+
+        $('#add-message-form').submit(function(e) {
+            e.preventDefault();
+            $.post("{{ url_for('add_message') }}", $(this).serialize())
+                .done(function() {
+                    location.reload();
+                })
+                .fail(function(xhr) {
+                    alert("Ошибка добавления сообщения: " + xhr.responseText);
+                });
+        });
+
+        // Найти по ID
+        $('#find-message-btn').click(function() {
+            const id = prompt("Введите ID сообщения:");
+            if (id) {
+                window.location.href = "{{ url_for('find_message') }}?id=" + id;
+            }
+        });
+
+        // Удалить по ID
+        $('#delete-message-btn').click(function() {
+            const id = prompt("Введите ID сообщения для удаления:");
+            if (id) {
+                if (confirm(`Вы уверены, что хотите удалить сообщение с ID ${id}?`)) {
+                    $.post("{{ url_for('delete_message') }}", { id: id })
+                        .done(function() { location.reload(); });
+                }
+            }
+        });
+
+        // --- Итоги/Клавиши цен ---
+        // Показать итоги продаж
+        $('#show-totals-btn').click(function() {
+            $.get("{{ url_for('get_total_sales_table') }}", function(data) {
+                $('#sales-results').html(data);
+            });
+        });
+
+        // Сбросить итоги продаж
+        $('#reset-totals-btn').click(function() {
+            if (confirm("Вы уверены, что хотите сбросить все итоги продаж?")) {
+                $.post("{{ url_for('reset_total_sales') }}")
+                    .done(function() { 
+                        window.location.href = "{{ url_for('plu') }}?active_tab=sales"; 
+                    });
+            }
+        });
+
+        // Привязать PLU к клавише
+        $('#bind-key-btn').click(function() {
+            const key = prompt("Введите номер клавиши (1-54):");
+            const plu = prompt("Введите ID PLU для привязки:");
+            if (key && plu) {
+                $.post("{{ url_for('bind_plu_to_key') }}", { key_num: key, plu_id: plu })
+                    .done(function(data) {
+                        window.location.href = "{{ url_for('plu') }}?active_tab=sales";
+                    })
+                    .fail(function(xhr) {
+                        $('#key-bind-result').html(
+                            `<div class="alert alert-danger">${xhr.responseJSON?.message || "Ошибка привязки"}</div>`
+                        );
+                    });
+            }
+        });
+
+        // Получить PLU по клавише
+        $('#get-plu-by-key-btn').click(function() {
+            const key = prompt("Введите номер клавиши (1-54):");
+            if (key) {
+                $.get("{{ url_for('get_plu_by_key') }}", { key_num: key }, function(data) {
+                    $('#key-bind-result').html(
+                        data.success
+                        ? `<div class="alert alert-info">PLU на клавише ${key}: <b>${data.plu}</b></div>`
+                        : `<div class="alert alert-warning">${data.message}</div>`
+                    );
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

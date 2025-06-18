@@ -1,0 +1,30 @@
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Пробег</th>
+            <th>Кол-во этикеток</th>
+            <th>Сумма продаж</th>
+            <th>Кол-во продаж</th>
+            <th>Общий вес</th>
+            <th>PLU сумма</th>
+            <th>PLU продажи</th>
+            <th>PLU вес</th>
+            <th>Свободных PLU</th>
+            <th>Свободных сообщений</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ totals.mileage }}</td>
+            <td>{{ totals.label_count }}</td>
+            <td>{{ totals.total_sum }}</td>
+            <td>{{ totals.sales_count }}</td>
+            <td>{{ totals.total_weight }}</td>
+            <td>{{ totals.plu_sum }}</td>
+            <td>{{ totals.plu_sales_count }}</td>
+            <td>{{ totals.plu_weight }}</td>
+            <td>{{ totals.free_plu }}</td>
+            <td>{{ totals.free_msg }}</td>
+        </tr>
+    </tbody>
+</table>

@@ -214,7 +214,7 @@ class AdminApp(QMainWindow):
             self.status_poller.stop()
             self.status_poller = None
         if self.admin:
-            self.admin._disconnect()
+            self.admin.disconnect()
             self.admin = None
         for i in range(1, self.sidebar.count()):
             self.sidebar.item(i).setFlags(Qt.NoItemFlags)

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Текущее состояние{% endblock %}
+{% block header %}Текущее состояние{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Байт состояния</label>
+                <input type="text" class="form-control" name="status_byte" value="{{ status.status_byte_hex }}" readonly>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Вес (г)</label>
+                <input type="text" class="form-control" name="weight" value="{{ status.weight }}" readonly>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Цена товара (коп/кг)</label>
+                <input type="text" class="form-control" name="price" value="{{ status.price }}" readonly>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Стоимость товара (коп)</label>
+                 <input type="text" class="form-control" name="sum" value="{{ status.sum }}" readonly>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Номер PLU</label>
+                <input type="text" class="form-control" name="plu_number" value="{{ status.plu_number }}" readonly>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Детализация состояния</label>
+            <textarea class="form-control" name="bits_str" rows="3" readonly>{{ status.bits_str }}</textarea>
+        </div>
+    </div>
+</div>
+
+<button class="btn btn-primary" id="refresh-status">
+    <i class="bi bi-arrow-repeat"></i> Обновить
+</button>
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+    $('#refresh-status').click(function() {
+        $.get("{{ url_for('get_current_status') }}", function(data) {
+            $('input[name="status_byte"]').val(data.status_byte_hex);
+            $('input[name="weight"]').val(data.weight);
+            $('input[name="price"]').val(data.price);
+            $('input[name="sum"]').val(data.sum);
+            $('input[name="plu_number"]').val(data.plu_number);
+            $('textarea[name="bits_str"]').val(data.bits_str);
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}
