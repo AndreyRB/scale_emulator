@@ -63,14 +63,13 @@
                     logoPreview.attr('src', e.target.result).removeClass('d-none');
                     $('#logo-preview-container p').addClass('d-none');
                     
-                    // Здесь будет преобразование в бинарный формат для весов
+                    // Здесь будет "наверное" преобразование в бинарный формат для весов
                     // logoData = convertImageToBinary(e.target.result);
                 };
                 reader.readAsDataURL(file);
             }
         });
         
-        // Остальные обработчики...
     });
 </script>
 {% endblock %}

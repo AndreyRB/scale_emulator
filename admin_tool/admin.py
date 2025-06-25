@@ -8,6 +8,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QMutex
 from struct import pack, unpack
 from threading import Lock
 
+
 # --- Константы команд и длин ---
 COMMANDS = {
     "read_logo2": b'\x97',
@@ -47,15 +48,15 @@ LENGTHS = {
 
 ERROR_RESPONSE = b'\xEE'
 
-@staticmethod
-def refresh_ports():
-    return [port.device for port in serial.tools.list_ports.comports()]
-        
+# Конфигурация
+SERIAL_PORT = '/dev/ttyS1'  # Для Orange Pi
+BAUDRATE = 9600
 
 class ScaleAdmin:
     plu_updated = pyqtSignal(dict)  # Сигнал при обновлении данных
     
-    def __init__(self, port: str = None, baudrate: str = None, ready_callback=None):
+    def __init__(self, port: str = "COM3", baudrate: str = "9600", ready_callback=None, admin_db = None):
+        self.db = admin_db
         self.port = port
         self.ser = None
         self.ready_callback = self._wrap_ready_callback(ready_callback)

@@ -23,18 +23,19 @@
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPluModal">
                 <i class="bi bi-plus-circle"></i> Добавить товар
             </button>
-            <button class="btn btn-secondary" id="find-plu-btn">
-                <i class="bi bi-search"></i> Найти по ID
-            </button>
+            <!-- <button class="btn btn-secondary" id="find-plu-btn"><i class="bi bi-search"></i> Найти по ID</button> -->
             <button class="btn btn-danger" id="delete-plu-btn">
                 <i class="bi bi-trash"></i> Удалить по ID
             </button>
             <button class="btn btn-warning" id="reset-plu-btn">
                 <i class="bi bi-arrow-counterclockwise"></i> Сбросить итоги по ID
             </button>
+            <button class="btn btn-outline-primary" id="refresh-plu-table">
+                <i class="bi bi-arrow-clockwise"></i> Обновить таблицу
+            </button>
             <button class="btn btn-outline-secondary" id="clear-plu-table">
                 <i class="bi bi-x-circle"></i> Очистить таблицу
-            </button>
+            </button>         
         </div>
         
         <div class="table-responsive">
@@ -65,7 +66,7 @@
                         <td>{{ plu.name1 }}</td>
                         <td>{{ plu.name2 }}</td>
                         <td>{{ "%.2f"|format(plu.price / 100) }}</td>
-                        <td>{{ plu.expiry }}</td>
+                        <td>{{ plu.expiry_value }}</td>
                         <td>{{ plu.tare }}</td>
                         <td>{{ plu.group_code }}</td>
                         <td>{{ plu.message_number }}</td>
@@ -193,6 +194,12 @@
 {% block scripts %}
 <script>
     $(document).ready(function() {
+        // Обновить таблицу
+        ///////////////////
+        $('#refresh-plu-table').click(function() {
+            location.reload();
+        });
+
         // Очистить таблицу
         ///////////////////
         $('#clear-plu-table').click(function() {
@@ -226,6 +233,7 @@
 
         // --- PLU ---
         // --- Добавить товар (PLU) ---
+
         $('#add-plu-btn').click(function() {
             $('#addPluModal').modal('show');
         });

@@ -41,7 +41,7 @@ if __name__ == "__main__":
     #     "Административная панель"
     # )
     admin = run_process(
-        [sys.executable, "-u", "scale_emulator/admin_tool/admin_guiFlask2.py"],
+        [sys.executable, "-u", "scale_emulator/admin_tool/admin_guiFlask.py"],
         "Flask админка"
     )
 

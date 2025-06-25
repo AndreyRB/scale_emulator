@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% block title %}История синхронизаций{% endblock %}
+{% block header %}История синхронизаций{% endblock %}
+{% block content %}
+
+<!-- Импорт товаров с весов по id -->
+<div class="card mb-3">
+    <div class="card-header">Импорт товаров с весов по id</div>
+    <div class="card-body">
+        <form id="import-plu-form">
+            <div class="mb-2">
+                <label for="plu-ids" class="form-label">ID товаров (через запятую):</label>
+                <input type="text" class="form-control" id="plu-ids" placeholder="Например: 1,2,3">
+            </div>
+            <button type="submit" class="btn btn-info">Получить с весов</button>
+        </form>
+    </div>
+</div>
+<div id="imported-plu-table"></div>
+
+<!-- Загрузка товаров на весы -->
+<div class="card mb-3">
+    <div class="card-header">Загрузка товаров на весы</div>
+    <div class="card-body">
+        <form id="sync-to-scales-form" class="mb-2">
+            <select id="sync-mode" class="form-select d-inline w-auto" style="vertical-align: middle;">
+                <option value="all">Все товары</option>
+                <option value="changed">Только изменённые</option>
+                <option value="selected">Выбрать вручную</option>
+            </select>
+            <button class="btn btn-success" type="submit">
+                <i class="bi bi-upload"></i> Загрузить на весы
+            </button>
+        </form>
+        <div id="select-plu-table" style="display:none;">
+            <!-- Таблица для ручного выбора товаров -->
+            <form id="manual-sync-form">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="select-all-plu"></th>
+                            <th>ID</th>
+                            <th>Код</th>
+                            <th>Название 1</th>
+                            <th>Название 2</th>
+                            <th>Цена (руб.)</th>
+                            <th>Дата годн.</th>
+                            <th>Тара (г)</th>
+                            <th>Групп. код</th>
+                            <th>Сообщение</th>
+                            <th>Сброс</th>
+                            <th>Сумма</th>
+                            <th>Вес</th>
+                            <th>Продажи</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for plu in plu_list %}
+                        <tr>
+                            <td><input type="checkbox" class="plu-checkbox" name="plu_id" value="{{ plu.id }}" checked></td>
+                            <td>{{ plu.id }}</td>
+                            <td>{{ plu.code }}</td>
+                            <td>{{ plu.name1 }}</td>
+                            <td>{{ plu.name2 }}</td>
+                            <td>{{ "%.2f"|format(plu.price / 100) }}</td>
+                            <td>{{ plu.expiry_value }}</td>
+                            <td>{{ plu.tare }}</td>
+                            <td>{{ plu.group_code }}</td>
+                            <td>{{ plu.message_number }}</td>
+                            <td>{{ plu.last_reset }}</td>
+                            <td>{{ plu.total_sum }}</td>
+                            <td>{{ plu.total_weight }}</td>
+                            <td>{{ plu.sales_count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" class="btn btn-primary">Загрузить выбранные</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- История синхронизаций -->
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Дата/время</th>
+            <th>Направление</th>
+            <th>Всего товаров</th>
+            <th>Ошибки (ID)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in history %}
+        <tr>
+            <td>{{ row.timestamp }}</td>
+            <td>
+                {% if row.direction == "to_scales" %}Сервер → Весы{% else %}Весы → Сервер{% endif %}
+            </td>
+            <td>{{ row.total }}</td>
+            <td>{{ row.errors }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<div id="sync-progress" style="display:none;">
+    <div class="progress mt-2">
+        <div id="sync-progress-bar" class="progress-bar" role="progressbar" style="width: 0%;">0%</div>
+    </div>
+    <div id="sync-status-text" class="mt-1"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Импорт с весов
+    $('#import-plu-form').submit(function(e) {
+        e.preventDefault();
+        let ids = $('#plu-ids').val().split(',').map(s => s.trim()).filter(Boolean);
+        if (!ids.length) return;
+        $.ajax({
+            url: "{{ url_for('import_selected_plu_from_scales') }}",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ids: ids}),
+            success: function(resp) {
+                renderImportedPluTable(resp.plu_list);
+            }
+        });
+    });
+
+    // Загрузка на весы: показать/скрыть таблицу выбора
+    $('#sync-mode').change(function() {
+        if ($(this).val() === 'selected') {
+            $('#select-plu-table').show();
+        } else {
+            $('#select-plu-table').hide();
+        }
+    });
+
+    // Чекбокс "выделить все" для ручного выбора
+    $(document).on('change', '#select-all-plu', function() {
+        $('.plu-checkbox').prop('checked', this.checked);
+    });
+
+    // Отправка выбранных товаров на весы
+    $('#manual-sync-form').submit(function(e) {
+        e.preventDefault();
+        let selected = $('.plu-checkbox:checked').map(function(){return this.value;}).get();
+        if (!selected.length) return;
+        if (confirm('Будут загружены только выбранные товары. Продолжить?')) {
+            $.ajax({
+                url: "{{ url_for('start_sync_selected_plu_to_scales') }}",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ids: selected}),
+                success: function() {
+                    pollSyncStatus();
+                }
+            });
+        }
+    });
+
+    // Основная кнопка "Загрузить на весы"
+    $('#sync-to-scales-form').submit(function(e) {
+        e.preventDefault();
+        let mode = $('#sync-mode').val();
+        if (mode === 'selected') {
+            $('#manual-sync-form').submit();
+            return;
+        }
+        let url = mode === 'changed'
+            ? "{{ url_for('start_sync_changed_plu_to_scales') }}"
+            : "{{ url_for('start_sync_plu_to_scales') }}";
+        if (confirm(mode === 'changed'
+            ? 'Будут загружены только изменённые товары. Продолжить?'
+            : 'Все товары на весах будут перезаписаны. Продолжить?')) {
+            $.post(url).done(function() {
+                pollSyncStatus();
+            });
+        }
+    });
+
+    function renderImportedPluTable(pluList) {
+        if (!pluList.length) {
+            $('#imported-plu-table').html('<div class="alert alert-warning">Товары не найдены</div>');
+            return;
+        }
+        let html = `<form id="save-imported-plu-form">
+        <table class="table table-striped">
+        <thead>
+            <tr>
+            <th><input type="checkbox" id="select-all-imported" checked></th>
+            <th>ID</th>
+            <th>Код</th>
+            <th>Название1</th>
+            <th>Название2</th>
+            <th>Цена (руб.)</th>
+            <th>Дата годности</th>
+            <th>Тара (г.)</th>
+            <th>Групп. код</th>
+            <th>Сообщение</th>
+            <th>Сброс</th>
+            <th>Сумма</th>
+            <th>Вес</th>
+            <th>Продажи</th>
+            </tr>
+        </thead>
+        <tbody>`;
+        for (let plu of pluList) {
+            html += `<tr>
+            <td><input type="checkbox" class="imported-plu-checkbox" name="plu_id" value="${plu.id}" checked></td>
+            <td>${plu.id}</td>
+            <td>${plu.code}</td>
+            <td>${plu.name1}</td>
+            <td>${plu.name2}</td>
+            <td>${(plu.price/100).toFixed(2)}</td>
+            <td>${plu.expiry_value}</td>
+            <td>${plu.tare}</td>
+            <td>${plu.group_code}</td>
+            <td>${plu.message_number}</td>
+            <td>${plu.last_reset}</td>
+            <td>${plu.total_sum}</td>
+            <td>${plu.total_weight}</td>
+            <td>${plu.sales_count}</td>
+            </tr>`;
+        }
+        html += `</tbody></table>
+        <button type="submit" class="btn btn-success">Добавить выбранные в базу</button>
+        </form>`;
+        $('#imported-plu-table').html(html);
+
+        // Чекбокс "выделить все"
+        $('#select-all-imported').on('change', function() {
+            $('.imported-plu-checkbox').prop('checked', this.checked);
+        });
+
+        // Сохранение выбранных
+        $('#save-imported-plu-form').submit(function(e) {
+            e.preventDefault();
+            let selected = $('.imported-plu-checkbox:checked').map(function(){return this.value;}).get();
+            if (!selected.length) return;
+            $.ajax({
+                url: "{{ url_for('save_imported_plu') }}",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ids: selected}),
+                success: function(resp) {
+                    alert("Добавлено товаров: " + resp.saved.length);
+                    $('#imported-plu-table').html('');
+                }
+            });
+        });
+    }
+
+    $(function() {
+            function pollSyncStatus() {
+                $.get("{{ url_for('get_sync_status') }}", function(data) {
+                    if (data.in_progress) {
+                        $('#sync-progress').show();
+                        let percent = data.total ? Math.floor(data.current / data.total * 100) : 0;
+                        $('#sync-progress-bar').css('width', percent + '%').text(percent + '%');
+                        $('#sync-status-text').text(
+                            (data.direction === "to_scales" ? "Загрузка в весы: " : "Импорт с весов: ") +
+                            data.current + " / " + data.total
+                        );
+                        setTimeout(pollSyncStatus, 500);
+                    } else if (data.done) {
+                        $('#sync-progress-bar').css('width', '100%').text('100%');
+                        $('#sync-status-text').text("Готово! Ошибок: " + data.errors.length);
+                        setTimeout(function() { $('#sync-progress').hide(); }, 3000);
+                    } else {
+                        $('#sync-progress').hide();
+                    }
+                });
+            }
+
+            $('#sync-to-scales-form').submit(function(e) {
+                e.preventDefault();
+                let mode = $('#sync-mode').val();
+                let url = mode === 'changed'
+                    ? "{{ url_for('start_sync_changed_plu_to_scales') }}"
+                    : "{{ url_for('start_sync_plu_to_scales') }}";
+                if (confirm(mode === 'changed'
+                    ? 'Будут загружены только изменённые товары. Продолжить?'
+                    : 'Все товары на весах будут перезаписаны. Продолжить?')) {
+                    $.post(url).done(function() {
+                        pollSyncStatus();
+                    });
+                }
+            });
+        });
+</script>
+{% endblock %}
