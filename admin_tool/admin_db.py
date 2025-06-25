@@ -215,9 +215,9 @@ class AdminDatabase:
             with self._get_connection() as c:
                 plu_data['updated_at'] = datetime.now().isoformat(sep=' ', timespec='seconds')
                 c.execute('''INSERT OR REPLACE INTO plu 
-                            (id, code, name1, name2, price, expiry_type, expiry_value, tare, group_code, message_number, logo_type, cert_code, updated_at)
+                            (id, code, name1, name2, price, expiry_type, expiry_value, tare, group_code, message_number, logo_type, cert_code, last_reset, total_sum, total_weight, sales_count, updated_at)
                             VALUES 
-                            (:id, :code, :name1, :name2, :price, :expiry_type, :expiry_value, :tare, :group_code, :message_number, :logo_type, :cert_code, :updated_at)''',
+                            (:id, :code, :name1, :name2, :price, :expiry_type, :expiry_value, :tare, :group_code, :message_number, :logo_type, :cert_code, :last_reset, :total_sum, :total_weight, :sales_count, :updated_at)''',
                             plu_data)
                 return c.rowcount > 0
         except sqlite3.IntegrityError as e:
@@ -234,10 +234,13 @@ class AdminDatabase:
                     name1 = NULL,
                     name2 = NULL,
                     price = NULL,
-                    expiry_date = NULL,
+                    expiry_type = NULL,
+                    expiry_value = NULL,
+                    logo_type = 0,
+                    cert_code = '',
                     tare = NULL,
                     group_code = NULL,
-                    message_id = NULL,
+                    message_number = NULL,
                     last_reset = NULL,
                     total_sum = 0,
                     total_weight = 0,

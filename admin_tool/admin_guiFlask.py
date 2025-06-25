@@ -279,12 +279,17 @@ def import_selected_plu_from_scales():
 def save_imported_plu():
     ids = request.json.get("ids", [])
     saved = []
+    errors = []
     for plu in imported_plu_list:
         if str(plu['id']) in ids:
-            db.upsert_plu(plu)
-            saved.append(plu['id'])
-    return jsonify({"saved": saved})
+            ok = db.upsert_plu(plu)
+            if ok:
+                saved.append(plu['id'])
+            else:
+                errors.append(plu['id'])
 
+    db.add_sync_history("from_scales", len(saved), errors)
+    return jsonify({"saved": saved})
 
 def normalize_plu_for_web(plu):
     # expiry -> expiry_value и expiry_type
@@ -321,7 +326,11 @@ def add_plu():
         'expiry_type': int(data['expiry_type']),
         'expiry_value': data.get('expiry_value', ''),
         'group_code': data['group_code'],
-        'message_number': int(data['message_number'])
+        'message_number': int(data['message_number']),
+        'last_reset': None,  # будет установлено на весах
+        'total_sum': 0,  # будет установлено на весах
+        'total_weight': 0,  # будет установлено на весах
+        'sales_count': 0,  # будет установлено на весах
     }
     ok = db.upsert_plu(plu_data)
     if ok:

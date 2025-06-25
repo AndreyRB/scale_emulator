@@ -62,18 +62,24 @@
                     {% for plu in plu_list %}
                     <tr>
                         <td>{{ plu.id }}</td>
-                        <td>{{ plu.code }}</td>
-                        <td>{{ plu.name1 }}</td>
-                        <td>{{ plu.name2 }}</td>
-                        <td>{{ "%.2f"|format(plu.price / 100) }}</td>
-                        <td>{{ plu.expiry_value }}</td>
-                        <td>{{ plu.tare }}</td>
-                        <td>{{ plu.group_code }}</td>
-                        <td>{{ plu.message_number }}</td>
-                        <td>{{ plu.last_reset }}</td>
-                        <td>{{ plu.total_sum }}</td>
-                        <td>{{ plu.total_weight }}</td>
-                        <td>{{ plu.sales_count }}</td>
+                        <td>{{ plu.code or '-' }}</td>
+                        <td>{{ plu.name1 or '-' }}</td>
+                        <td>{{ plu.name2 or '-' }}</td>
+                        <td>
+                        {% if plu.price is not none %}
+                            {{ "%.2f"|format(plu.price / 100) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                        </td>
+                        <td>{{ plu.expiry_value or '-' }}</td>
+                        <td>{{ plu.tare if plu.tare is not none else '-' }}</td>
+                        <td>{{ plu.group_code or '-' }}</td>
+                        <td>{{ plu.message_number if plu.message_number is not none else '-' }}</td>
+                        <td>{{ plu.last_reset or '-' }}</td>
+                        <td>{{ plu.total_sum if plu.total_sum is not none else '-' }}</td>
+                        <td>{{ plu.total_weight if plu.total_weight is not none else '-' }}</td>
+                        <td>{{ plu.sales_count if plu.sales_count is not none else '-' }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-danger remove-row" title="Удалить из таблицы">
                                 <i class="bi bi-x"></i>
